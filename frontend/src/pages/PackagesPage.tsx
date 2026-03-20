@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Table, Card, Button, Space, Modal, Form, Input, InputNumber, Upload, Select, message, Popconfirm } from 'antd';
+import { Table, Card, Button, Space, Modal, Form, Input, InputNumber, Upload, Select, message, Popconfirm, DatePicker } from 'antd';
 import { PlusOutlined, DeleteOutlined, DownloadOutlined, KeyOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { packageAPI, passwordAPI } from '../api/client';
 
 const { Option } = Select;
@@ -79,10 +80,16 @@ export default function PackagesPage() {
       return;
     }
     try {
-      const passwordData = {
+      const passwordData: any = {
         password: values.password,
         priority: values.priority || 1,
       };
+      if (values.valid_from) {
+        passwordData.valid_from = values.valid_from.toISOString();
+      }
+      if (values.valid_until) {
+        passwordData.valid_until = values.valid_until.toISOString();
+      }
       await passwordAPI.create(selectedPackage.id, passwordData);
       message.success('密码添加成功');
       setPasswordModalVisible(false);
@@ -178,19 +185,32 @@ export default function PackagesPage() {
         open={passwordModalVisible} 
         onCancel={() => setPasswordModalVisible(false)}
         footer={null}
-        width={700}
+        width={800}
       >
-        <div style={{ marginBottom: 16 }}>
-          <Form form={passwordForm} layout="inline" onFinish={handleAddPassword}>
-            <Form.Item name="password" rules={[{ required: true }]}>
-              <Input placeholder="密码" />
+        <Form 
+          form={passwordForm} 
+          layout="vertical" 
+          onFinish={handleAddPassword}
+          style={{ marginBottom: 16 }}
+        >
+          <Space align="start" wrap>
+            <Form.Item name="password" label="密码" rules={[{ required: true }]}>
+              <Input.Password placeholder="输入密码" style={{ width: 200 }} />
             </Form.Item>
-            <Form.Item name="priority" initialValue={1}>
-              <InputNumber min={1} placeholder="优先级" />
+            <Form.Item name="priority" label="优先级" initialValue={1}>
+              <InputNumber min={1} style={{ width: 100 }} />
             </Form.Item>
-            <Button type="primary" htmlType="submit">添加密码</Button>
-          </Form>
-        </div>
+            <Form.Item name="valid_from" label="生效时间">
+              <DatePicker showTime placeholder="生效时间" />
+            </Form.Item>
+            <Form.Item name="valid_until" label="失效时间">
+              <DatePicker showTime placeholder="失效时间" />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit">添加</Button>
+            </Form.Item>
+          </Space>
+        </Form>
         <Table dataSource={passwords} columns={passwordColumns} rowKey="id" size="small" />
       </Modal>
     </div>
