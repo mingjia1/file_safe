@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Password Timer Manager"
     VERSION: str = "1.0.0"
     DEBUG: bool = True
+    API_BASE_URL: Optional[str] = None
 
     DATABASE_TYPE: str = "sqlite"
     DATABASE_URL: str = "sqlite+aiosqlite:///./ptm.db"

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Table, Card, Button, Space, Modal, Form, Input, InputNumber, Upload, Select, message, Popconfirm, DatePicker, Tag } from 'antd';
-import { PlusOutlined, DeleteOutlined, DownloadOutlined, KeyOutlined, EditOutlined, CheckCircleOutlined, StopOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, DownloadOutlined, KeyOutlined, EditOutlined, CheckCircleOutlined, StopOutlined, FileOutlined, LockOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { packageAPI, passwordAPI } from '../api/client';
 
@@ -92,18 +92,32 @@ export default function PackagesPage() {
     }
   };
 
-  const handleDownload = async (id: string, name: string) => {
+  const handleDownload = async (id: string, name: string, encrypted: boolean = false) => {
     try {
-      const response = await packageAPI.download(id);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = encrypted 
+        ? `/api/v1/packages/${id}/encrypted`
+        : `/api/v1/packages/${id}/download`;
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || '下载失败');
+      }
+      const blob = await response.blob();
+      const downloadName = encrypted ? `${name}_encrypted.zip` : `${name}`;
+      const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', name);
+      link.href = blobUrl;
+      link.setAttribute('download', downloadName);
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (error) {
-      message.error('下载文件包失败');
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error: any) {
+      message.error(error.message || '下载文件包失败');
     }
   };
 
@@ -216,11 +230,12 @@ export default function PackagesPage() {
     { title: '文件大小', dataIndex: 'file_size', key: 'file_size', render: (size: number) => `${(size / 1024).toFixed(2)} KB` },
     { title: '密码数', dataIndex: 'password_count', key: 'password_count' },
     { title: '创建时间', dataIndex: 'created_at', key: 'created_at', render: (date: string) => new Date(date).toLocaleString() },
-    { title: '操作', key: 'actions', width: 280, render: (_: any, record: any) => (
+    { title: '操作', key: 'actions', width: 320, render: (_: any, record: any) => (
       <Space size="small">
         <Button size="small" type="link" icon={<EditOutlined />} onClick={() => openEditModal(record)}>编辑</Button>
         <Button size="small" icon={<KeyOutlined />} onClick={() => openPasswordModal(record)}>密码</Button>
-        <Button size="small" icon={<DownloadOutlined />} onClick={() => handleDownload(record.id, record.name)}>下载</Button>
+        <Button size="small" icon={<FileOutlined />} onClick={() => handleDownload(record.id, record.name, false)}>源文件</Button>
+        <Button size="small" icon={<LockOutlined />} onClick={() => handleDownload(record.id, record.name, true)}>加密包</Button>
         <Popconfirm title="确定删除?" onConfirm={() => handleDelete(record.id)}>
           <Button size="small" danger type="link" icon={<DeleteOutlined />}>删除</Button>
         </Popconfirm>

@@ -4,8 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import Optional
 import os
+import sys
 import uuid
 import hashlib
+
+sys.path.insert(0, '/workspace')
 
 from app.core.database import get_db
 from app.core.config import settings
@@ -265,6 +268,91 @@ async def download_package(
         filename=f"{package.name}.{package.format}",
         media_type="application/octet-stream"
     )
+
+
+@router.get("/{package_id}/encrypted")
+async def download_encrypted_package(
+    package_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    from fastapi.responses import StreamingResponse
+    from generator.src.zip_builder import ZIPBuilder
+    import tempfile
+    
+    result = await db.execute(select(FilePackage).where(FilePackage.id == str(package_id)))
+    package = result.scalar_one_or_none()
+    
+    if not package:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="package not found")
+    
+    if not os.path.exists(package.file_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="source file not found")
+    
+    result = await db.execute(
+        select(PasswordPolicy).where(
+            PasswordPolicy.package_id == str(package_id),
+            PasswordPolicy.status == PasswordStatus.ACTIVE.value
+        ).order_by(PasswordPolicy.priority)
+    )
+    passwords = result.scalars().all()
+    
+    if not passwords:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="no active password found")
+    
+    verify_config = {
+        "api_url": settings.API_BASE_URL or "http://localhost:8080",
+        "package_id": str(package.id),
+        "passwords": [
+            {
+                "priority": pwd.priority,
+                "valid_from": pwd.valid_from.isoformat() if pwd.valid_from else None,
+                "valid_until": pwd.valid_until.isoformat() if pwd.valid_until else None,
+            }
+            for pwd in passwords
+        ]
+    }
+    
+    temp_dir = tempfile.mkdtemp(prefix="ptm_encrypted_")
+    encrypted_path = os.path.join(temp_dir, f"{package.name}_encrypted.zip")
+    
+    try:
+        builder = ZIPBuilder()
+        builder.build(
+            package_id=str(package.id),
+            package_name=package.name,
+            source_file=package.file_path,
+            output_path=encrypted_path,
+            verify_config=verify_config,
+        )
+        
+        audit_log = AuditLog(
+            id=str(uuid.uuid4()),
+            action=AuditAction.DOWNLOAD.value,
+            package_id=str(package_id),
+            detail={"type": "encrypted"}
+        )
+        db.add(audit_log)
+        await db.commit()
+        
+        def file_iterator():
+            with open(encrypted_path, 'rb') as f:
+                while chunk := f.read(8192):
+                    yield chunk
+            os.remove(encrypted_path)
+            os.rmdir(temp_dir)
+        
+        return StreamingResponse(
+            file_iterator(),
+            media_type="application/octet-stream",
+            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{package.name}_encrypted.zip"}
+        )
+    except Exception as e:
+        import shutil
+        if os.path.exists(encrypted_path):
+            os.remove(encrypted_path)
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.post("/{package_id}/download-url", response_model=DownloadURLResponse)
