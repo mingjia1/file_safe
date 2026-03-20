@@ -68,59 +68,30 @@ class ZIPBuilder:
         
         source_hash = CryptoUtils.compute_file_hash(source_file)
         
-        try:
-            import pyzipper
-            with pyzipper.AESZipFile(output_path, 'w', compression=pyzipper.ZIP_DEFLATED, encryption=pyzipper.WZ_AES) as zf:
-                zf.setpassword(b'PTM_PACKAGE_KEY_2024')
-                
-                temp_encrypted = os.path.join(os.path.dirname(output_path) or '.', ".encrypted.tmp")
-                with open(temp_encrypted, 'wb') as ef:
-                    ef.write(encrypted_data.encode('utf-8'))
-                zf.write(temp_encrypted, arcname="data.bin.encrypted")
-                os.remove(temp_encrypted)
-                
-                config_path = os.path.join(os.path.dirname(output_path) or '.', ".config.tmp")
-                with open(config_path, 'w', encoding='utf-8') as f:
-                    json.dump(config_data, f, indent=2, ensure_ascii=False)
-                zf.write(config_path, arcname="config.json")
-                os.remove(config_path)
-                
-                info_data = {
-                    "package_id": package_id,
-                    "package_name": package_name,
-                    "source_file_hash": source_hash,
-                    "format": "zip"
-                }
-                info_path = os.path.join(os.path.dirname(output_path) or '.', ".info.tmp")
-                with open(info_path, 'w', encoding='utf-8') as f:
-                    json.dump(info_data, f, indent=2)
-                zf.write(info_path, arcname="info.json")
-                os.remove(info_path)
-        except ImportError:
-            with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zf:
-                temp_encrypted = os.path.join(os.path.dirname(output_path) or '.', ".encrypted.tmp")
-                with open(temp_encrypted, 'w', encoding='utf-8') as ef:
-                    ef.write(encrypted_data)
-                zf.write(temp_encrypted, arcname="data.bin.encrypted")
-                os.remove(temp_encrypted)
-                
-                config_path = os.path.join(os.path.dirname(output_path) or '.', ".config.tmp")
-                with open(config_path, 'w', encoding='utf-8') as f:
-                    json.dump(config_data, f, indent=2, ensure_ascii=False)
-                zf.write(config_path, arcname="config.json")
-                os.remove(config_path)
-                
-                info_data = {
-                    "package_id": package_id,
-                    "package_name": package_name,
-                    "source_file_hash": source_hash,
-                    "format": "zip"
-                }
-                info_path = os.path.join(os.path.dirname(output_path) or '.', ".info.tmp")
-                with open(info_path, 'w', encoding='utf-8') as f:
-                    json.dump(info_data, f, indent=2)
-                zf.write(info_path, arcname="info.json")
-                os.remove(info_path)
+        with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            temp_encrypted = os.path.join(os.path.dirname(output_path) or '.', ".encrypted.tmp")
+            with open(temp_encrypted, 'wb') as ef:
+                ef.write(encrypted_data.encode('utf-8'))
+            zf.write(temp_encrypted, arcname="data.bin.encrypted")
+            os.remove(temp_encrypted)
+            
+            config_path = os.path.join(os.path.dirname(output_path) or '.', ".config.tmp")
+            with open(config_path, 'w', encoding='utf-8') as f:
+                json.dump(config_data, f, indent=2, ensure_ascii=False)
+            zf.write(config_path, arcname="config.json")
+            os.remove(config_path)
+            
+            info_data = {
+                "package_id": package_id,
+                "package_name": package_name,
+                "source_file_hash": source_hash,
+                "format": "zip"
+            }
+            info_path = os.path.join(os.path.dirname(output_path) or '.', ".info.tmp")
+            with open(info_path, 'w', encoding='utf-8') as f:
+                json.dump(info_data, f, indent=2)
+            zf.write(info_path, arcname="info.json")
+            os.remove(info_path)
         
         return output_path
 
