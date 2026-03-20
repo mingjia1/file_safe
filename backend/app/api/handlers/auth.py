@@ -31,19 +31,17 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
             detail="account is disabled"
         )
     
-    user.last_login = datetime.utcnow()
-    await db.commit()
-    
     token = create_access_token({
         "sub": str(user.id),
         "username": user.username,
         "role": user.role
     })
     
-    return LoginResponse(
-        token=token,
-        expires_at=datetime.utcnow()
-    )
+    from datetime import timedelta
+    from app.core.config import settings
+    expires_at = datetime.utcnow() + timedelta(hours=settings.JWT_EXPIRE_HOURS)
+    
+    return LoginResponse(token=token, expires_at=expires_at)
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -68,11 +66,18 @@ async def register(request: UserCreate, db: AsyncSession = Depends(get_db)):
         password_hash=get_password_hash(request.password),
         role=request.role.value,
         status=UserStatus.ACTIVE.value,
-        created_at=datetime.utcnow()
     )
     
     db.add(user)
     await db.commit()
     await db.refresh(user)
     
-    return user
+    return UserResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        role=user.role,
+        status=user.status,
+        created_at=user.created_at,
+        last_login=user.last_login,
+    )

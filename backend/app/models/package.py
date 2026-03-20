@@ -1,7 +1,5 @@
-import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, DateTime, Integer, Text, BigInteger, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 import enum
 
@@ -21,7 +19,7 @@ class PackageStatus(str, enum.Enum):
 class FilePackage(Base):
     __tablename__ = "file_packages"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True)
     name = Column(String(255), nullable=False)
     format = Column(String(16), nullable=False)
     description = Column(Text, nullable=True)
@@ -29,7 +27,7 @@ class FilePackage(Base):
     file_path = Column(String(512), nullable=False)
     file_hash = Column(String(128), nullable=False)
     file_size = Column(BigInteger, nullable=False)
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_by = Column(String(36), ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=True)
 

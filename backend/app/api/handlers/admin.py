@@ -80,7 +80,7 @@ async def get_encryption_config(db: AsyncSession = Depends(get_db)):
     
     if not config:
         config = EncryptionConfig(
-            id=uuid.uuid4(),
+            id=str(uuid.uuid4()),
             aes_key_length=256,
             rsa_key_length=2048,
             password_min_length=8,
@@ -119,7 +119,7 @@ async def update_encryption_config(
     config = result.scalar_one_or_none()
     
     if not config:
-        config = EncryptionConfig(id=uuid.uuid4())
+        config = EncryptionConfig(id=str(uuid.uuid4()))
         db.add(config)
     
     if request.aes_key_length is not None:

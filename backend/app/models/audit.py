@@ -1,8 +1,6 @@
-import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text
-from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy import Index
+from sqlalchemy import Column, String, DateTime, Text, Index
+from sqlalchemy import JSON
 import enum
 
 from app.core.database import Base
@@ -31,13 +29,13 @@ class AuditAction(str, enum.Enum):
 class AuditLog(Base):
     __tablename__ = "audit_logs"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True)
     action = Column(String(64), nullable=False, index=True)
-    package_id = Column(UUID(as_uuid=True), ForeignKey("file_packages.id"), nullable=True, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True)
+    package_id = Column(String(36), nullable=True, index=True)
+    user_id = Column(String(36), nullable=True, index=True)
     ip_address = Column(String(64), nullable=True)
     user_agent = Column(Text, nullable=True)
-    detail = Column(JSONB, nullable=True)
+    detail = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
 
     __table_args__ = (

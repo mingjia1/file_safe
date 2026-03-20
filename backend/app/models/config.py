@@ -1,7 +1,5 @@
-import uuid
 from datetime import datetime
-from sqlalchemy import Column, Integer, DateTime, Boolean, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Integer, DateTime, Boolean
 
 from app.core.database import Base
 
@@ -9,7 +7,7 @@ from app.core.database import Base
 class EncryptionConfig(Base):
     __tablename__ = "encryption_configs"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True)
     aes_key_length = Column(Integer, nullable=False, default=256)
     rsa_key_length = Column(Integer, nullable=False, default=2048)
     password_min_length = Column(Integer, nullable=False, default=8)
@@ -20,4 +18,4 @@ class EncryptionConfig(Base):
     config_encrypt = Column(Boolean, nullable=False, default=True)
     enable_signature = Column(Boolean, nullable=False, default=True)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    updated_by = Column(String(36), nullable=True)

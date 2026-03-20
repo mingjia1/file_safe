@@ -2,11 +2,11 @@ import uuid
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
+import bcrypt
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from passlib.context import CryptContext
 
 from app.core.database import get_db
 from app.models.package import FilePackage, PackageStatus
@@ -14,7 +14,6 @@ from app.models.password import PasswordPolicy, PasswordStatus
 from app.models.audit import AuditLog, AuditAction
 from app.schemas.verify import VerifyRequest, VerifyResponse, BatchVerifyRequest, BatchVerifyResponse
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 router = APIRouter(prefix="/verify", tags=["verify"])
 
 
@@ -38,7 +37,7 @@ async def verify_password(
     request: VerifyRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(FilePackage).where(FilePackage.id == request.package_id))
+    result = await db.execute(select(FilePackage).where(FilePackage.id == str(request.package_id)))
     package = result.scalar_one_or_none()
     
     if not package:
@@ -54,7 +53,7 @@ async def verify_password(
         )
     
     result = await db.execute(
-        select(PasswordPolicy).where(PasswordPolicy.package_id == request.package_id)
+        select(PasswordPolicy).where(PasswordPolicy.package_id == str(request.package_id))
     )
     passwords = result.scalars().all()
     
@@ -64,29 +63,32 @@ async def verify_password(
         if not is_password_active(pwd_policy):
             continue
         
-        if pwd_context.verify(request.password, pwd_policy.password_hash):
-            key = f"{package.id}:{pwd_policy.id}"
-            
-            audit_log = AuditLog(
-                id=uuid.uuid4(),
-                action=AuditAction.VERIFY_SUCCESS.value,
-                package_id=package.id,
-                created_at=now,
-                detail={"password_id": str(pwd_policy.id), "verify_mode": "online"}
-            )
-            db.add(audit_log)
-            await db.commit()
-            
-            return VerifyResponse(
-                valid=True,
-                key=key,
-                expires_at=now
-            )
+        try:
+            if bcrypt.checkpw(request.password.encode('utf-8'), pwd_policy.password_hash.encode('utf-8')):
+                key = f"{package.id}:{pwd_policy.id}"
+                
+                audit_log = AuditLog(
+                    id=str(uuid.uuid4()),
+                    action=AuditAction.VERIFY_SUCCESS.value,
+                    package_id=str(package.id),
+                    created_at=now,
+                    detail={"password_id": str(pwd_policy.id), "verify_mode": "online"}
+                )
+                db.add(audit_log)
+                await db.commit()
+                
+                return VerifyResponse(
+                    valid=True,
+                    key=key,
+                    expires_at=now
+                )
+        except Exception:
+            continue
     
     audit_log = AuditLog(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         action=AuditAction.VERIFY_FAIL.value,
-        package_id=package.id,
+        package_id=str(package.id),
         created_at=now,
         detail={"attempted_password": request.password[:10]}
     )

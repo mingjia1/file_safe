@@ -7,8 +7,8 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     DEBUG: bool = True
 
-    DATABASE_URL: str = "postgresql+asyncpg://ptm_user:ptm_password@localhost:5432/ptm_db"
-    DATABASE_URL_SYNC: str = "postgresql://ptm_user:ptm_password@localhost:5432/ptm_db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./ptm.db"
+    DATABASE_URL_SYNC: str = "sqlite:///./ptm.db"
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379

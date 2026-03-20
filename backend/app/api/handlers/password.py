@@ -23,10 +23,11 @@ async def create_password(
     db: AsyncSession = Depends(get_db),
 ):
     password_hash = get_password_hash(request.password)
+    package_id_str = str(package_id)
     
     policy = PasswordPolicy(
-        id=uuid.uuid4(),
-        package_id=package_id,
+        id=str(uuid.uuid4()),
+        package_id=package_id_str,
         password_hash=password_hash,
         priority=request.priority,
         valid_from=request.valid_from,
@@ -37,9 +38,9 @@ async def create_password(
     db.add(policy)
     
     audit_log = AuditLog(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         action=AuditAction.POLICY_CREATE.value,
-        package_id=package_id,
+        package_id=package_id_str,
     )
     db.add(audit_log)
     
@@ -63,14 +64,15 @@ async def batch_create_passwords(
     request: BatchCreatePasswordRequest,
     db: AsyncSession = Depends(get_db),
 ):
+    package_id_str = str(package_id)
     policies = []
     
     for pwd_req in request.passwords:
         password_hash = get_password_hash(pwd_req.password)
         
         policy = PasswordPolicy(
-            id=uuid.uuid4(),
-            package_id=package_id,
+            id=str(uuid.uuid4()),
+            package_id=package_id_str,
             password_hash=password_hash,
             priority=pwd_req.priority,
             valid_from=pwd_req.valid_from,
@@ -82,9 +84,9 @@ async def batch_create_passwords(
     db.add_all(policies)
     
     audit_log = AuditLog(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         action=AuditAction.POLICY_CREATE.value,
-        package_id=package_id,
+        package_id=package_id_str,
         detail={"count": len(policies)}
     )
     db.add(audit_log)
@@ -101,7 +103,7 @@ async def list_passwords(
 ):
     result = await db.execute(
         select(PasswordPolicy)
-        .where(PasswordPolicy.package_id == package_id)
+        .where(PasswordPolicy.package_id == str(package_id))
         .order_by(PasswordPolicy.priority)
     )
     passwords = result.scalars().all()
@@ -130,10 +132,8 @@ async def get_current_password(
     result = await db.execute(
         select(PasswordPolicy)
         .where(
-            PasswordPolicy.package_id == package_id,
+            PasswordPolicy.package_id == str(package_id),
             PasswordPolicy.status == PasswordStatus.ACTIVE.value,
-            (PasswordPolicy.valid_from == None) | (PasswordPolicy.valid_from <= now),
-            (PasswordPolicy.valid_until == None) | (PasswordPolicy.valid_until > now),
         )
         .order_by(PasswordPolicy.priority)
         .limit(1)
@@ -158,7 +158,7 @@ async def get_password(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(PasswordPolicy).where(PasswordPolicy.id == password_id)
+        select(PasswordPolicy).where(PasswordPolicy.id == str(password_id))
     )
     password = result.scalar_one_or_none()
     
@@ -182,7 +182,7 @@ async def update_password(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(PasswordPolicy).where(PasswordPolicy.id == password_id)
+        select(PasswordPolicy).where(PasswordPolicy.id == str(password_id))
     )
     password = result.scalar_one_or_none()
     
@@ -199,7 +199,7 @@ async def update_password(
         password.valid_until = request.valid_until
     
     audit_log = AuditLog(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         action=AuditAction.POLICY_UPDATE.value,
         package_id=password.package_id,
         detail={"password_id": str(password_id)}
@@ -225,7 +225,7 @@ async def delete_password(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(PasswordPolicy).where(PasswordPolicy.id == password_id)
+        select(PasswordPolicy).where(PasswordPolicy.id == str(password_id))
     )
     password = result.scalar_one_or_none()
     
@@ -237,7 +237,7 @@ async def delete_password(
     await db.delete(password)
     
     audit_log = AuditLog(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         action=AuditAction.POLICY_DELETE.value,
         package_id=package_id,
     )
@@ -252,7 +252,7 @@ async def activate_password(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(PasswordPolicy).where(PasswordPolicy.id == password_id)
+        select(PasswordPolicy).where(PasswordPolicy.id == str(password_id))
     )
     password = result.scalar_one_or_none()
     
@@ -262,7 +262,7 @@ async def activate_password(
     password.status = PasswordStatus.ACTIVE.value
     
     audit_log = AuditLog(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         action=AuditAction.POLICY_ACTIVATE.value,
         package_id=password.package_id,
     )
@@ -287,7 +287,7 @@ async def deactivate_password(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(PasswordPolicy).where(PasswordPolicy.id == password_id)
+        select(PasswordPolicy).where(PasswordPolicy.id == str(password_id))
     )
     password = result.scalar_one_or_none()
     
@@ -297,7 +297,7 @@ async def deactivate_password(
     password.status = PasswordStatus.DISABLED.value
     
     audit_log = AuditLog(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         action=AuditAction.POLICY_DEACTIVATE.value,
         package_id=password.package_id,
     )

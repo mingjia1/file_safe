@@ -39,13 +39,14 @@ async def create_package(
     file_size = len(file_content)
     file_hash = hashlib.sha256(file_content).hexdigest()
     
-    file_path = f"{settings.STORAGE_LOCAL_PATH}/packages/{uuid.uuid4()}"
+    package_id = str(uuid.uuid4())
+    file_path = f"{settings.STORAGE_LOCAL_PATH}/packages/{package_id}"
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "wb") as f:
         f.write(file_content)
     
     package = FilePackage(
-        id=uuid.uuid4(),
+        id=package_id,
         name=name,
         format=format.value,
         description=description,
@@ -53,15 +54,15 @@ async def create_package(
         file_path=file_path,
         file_hash=file_hash,
         file_size=file_size,
-        created_by=uuid.UUID(user_id) if user_id != "current-user-id" else uuid.uuid4(),
+        created_by=user_id if user_id != "current-user-id" else str(uuid.uuid4()),
     )
     
     db.add(package)
     
     audit_log = AuditLog(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         action=AuditAction.PACKAGE_CREATE.value,
-        package_id=package.id,
+        package_id=package_id,
         created_at=package.created_at,
     )
     db.add(audit_log)
@@ -87,22 +88,22 @@ async def create_package(
 async def list_packages(
     page: int = 1,
     page_size: int = 20,
-    status: Optional[PackageStatus] = None,
+    status_filter: Optional[PackageStatus] = None,
     format: Optional[PackageFormat] = None,
     db: AsyncSession = Depends(get_db),
 ):
     query = select(FilePackage)
     count_query = select(func.count(FilePackage.id))
     
-    if status:
-        query = query.where(FilePackage.status == status.value)
-        count_query = count_query.where(FilePackage.status == status.value)
+    if status_filter:
+        query = query.where(FilePackage.status == status_filter.value)
+        count_query = count_query.where(FilePackage.status == status_filter.value)
     if format:
         query = query.where(FilePackage.format == format.value)
         count_query = count_query.where(FilePackage.format == format.value)
     
     total_result = await db.execute(count_query)
-    total = total_result.scalar()
+    total = total_result.scalar() or 0
     
     query = query.offset((page - 1) * page_size).limit(page_size).order_by(FilePackage.created_at.desc())
     result = await db.execute(query)
@@ -113,7 +114,7 @@ async def list_packages(
         pwd_count_result = await db.execute(
             select(func.count(PasswordPolicy.id)).where(PasswordPolicy.package_id == pkg.id)
         )
-        pwd_count = pwd_count_result.scalar()
+        pwd_count = pwd_count_result.scalar() or 0
         
         items.append(PackageResponse(
             id=pkg.id,
@@ -129,7 +130,7 @@ async def list_packages(
             password_count=pwd_count,
         ))
     
-    total_pages = (total + page_size - 1) // page_size
+    total_pages = (total + page_size - 1) // page_size if total > 0 else 0
     
     return PackageListResponse(
         items=items,
@@ -145,21 +146,21 @@ async def get_package(
     package_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(FilePackage).where(FilePackage.id == package_id))
+    result = await db.execute(select(FilePackage).where(FilePackage.id == str(package_id)))
     package = result.scalar_one_or_none()
     
     if not package:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="package not found")
     
     pwd_result = await db.execute(
-        select(PasswordPolicy).where(PasswordPolicy.package_id == package_id).order_by(PasswordPolicy.priority)
+        select(PasswordPolicy).where(PasswordPolicy.package_id == str(package_id)).order_by(PasswordPolicy.priority)
     )
     passwords = pwd_result.scalars().all()
     
     pwd_count_result = await db.execute(
-        select(func.count(PasswordPolicy.id)).where(PasswordPolicy.package_id == package_id)
+        select(func.count(PasswordPolicy.id)).where(PasswordPolicy.package_id == str(package_id))
     )
-    pwd_count = pwd_count_result.scalar()
+    pwd_count = pwd_count_result.scalar() or 0
     
     return PackageResponse(
         id=package.id,
@@ -182,7 +183,7 @@ async def update_package(
     request: UpdatePackageRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(FilePackage).where(FilePackage.id == package_id))
+    result = await db.execute(select(FilePackage).where(FilePackage.id == str(package_id)))
     package = result.scalar_one_or_none()
     
     if not package:
@@ -218,18 +219,19 @@ async def delete_package(
     package_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(FilePackage).where(FilePackage.id == package_id))
+    result = await db.execute(select(FilePackage).where(FilePackage.id == str(package_id)))
     package = result.scalar_one_or_none()
     
     if not package:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="package not found")
     
+    package_id_str = str(package_id)
     await db.delete(package)
     
     audit_log = AuditLog(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         action=AuditAction.PACKAGE_DELETE.value,
-        package_id=package_id,
+        package_id=package_id_str,
     )
     db.add(audit_log)
     
@@ -241,7 +243,7 @@ async def download_package(
     package_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(FilePackage).where(FilePackage.id == package_id))
+    result = await db.execute(select(FilePackage).where(FilePackage.id == str(package_id)))
     package = result.scalar_one_or_none()
     
     if not package:
@@ -251,9 +253,9 @@ async def download_package(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="file not found")
     
     audit_log = AuditLog(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         action=AuditAction.DOWNLOAD.value,
-        package_id=package_id,
+        package_id=str(package_id),
     )
     db.add(audit_log)
     await db.commit()
