@@ -17,17 +17,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const logout = useAuthStore((state) => state.logout);
 
   const menuItems = [
-    { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
-    { key: '/packages', icon: <FileProtectOutlined />, label: 'Packages' },
-    { key: '/audit', icon: <AuditOutlined />, label: 'Audit Logs' },
-    { key: '/settings', icon: <SettingOutlined />, label: 'Settings' },
+    { key: '/dashboard', icon: <DashboardOutlined />, label: '仪表盘' },
+    { key: '/packages', icon: <FileProtectOutlined />, label: '文件包' },
+    { key: '/audit', icon: <AuditOutlined />, label: '审计日志' },
+    { key: '/settings', icon: <SettingOutlined />, label: '系统设置' },
   ];
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Header style={{ display: 'flex', alignItems: 'center', background: '#001529', padding: '0 24px' }}>
         <div style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginRight: 48 }}>
-          Password Timer Manager
+          密码时效管理器
         </div>
         <div style={{ marginLeft: 'auto', color: 'white' }}>
           <LogoutOutlined style={{ cursor: 'pointer' }} onClick={logout} />

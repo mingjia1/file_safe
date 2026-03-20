@@ -18,7 +18,7 @@ export default function DashboardPage() {
       const response = await adminAPI.getDashboardStats();
       setStats(response.data);
     } catch (error) {
-      console.error('Failed to load statistics');
+      console.error('加载统计失败');
     } finally {
       setLoading(false);
     }
@@ -26,12 +26,12 @@ export default function DashboardPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1>Dashboard</h1>
+      <h1>仪表盘</h1>
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={6}>
           <Card>
             <Statistic
-              title="Total Packages"
+              title="文件包总数"
               value={stats?.total_packages || 0}
               prefix={<FileProtectOutlined />}
               loading={loading}
@@ -41,7 +41,7 @@ export default function DashboardPage() {
         <Col span={6}>
           <Card>
             <Statistic
-              title="Active Packages"
+              title="活跃文件包"
               value={stats?.active_packages || 0}
               prefix={<FileProtectOutlined />}
               loading={loading}
@@ -51,7 +51,7 @@ export default function DashboardPage() {
         <Col span={6}>
           <Card>
             <Statistic
-              title="Active Passwords"
+              title="活跃密码"
               value={stats?.active_passwords || 0}
               prefix={<LockOutlined />}
               loading={loading}
@@ -61,7 +61,7 @@ export default function DashboardPage() {
         <Col span={6}>
           <Card>
             <Statistic
-              title="Verify Success Rate"
+              title="验证成功率"
               value={(stats?.verify_success_rate || 0) * 100}
               suffix="%"
               prefix={<CheckCircleOutlined />}
@@ -76,7 +76,7 @@ export default function DashboardPage() {
         <Col span={6}>
           <Card>
             <Statistic
-              title="Total Downloads"
+              title="总下载次数"
               value={stats?.total_downloads || 0}
               prefix={<DownloadOutlined />}
               loading={loading}
@@ -86,7 +86,7 @@ export default function DashboardPage() {
         <Col span={6}>
           <Card>
             <Statistic
-              title="Total Verifications"
+              title="总验证次数"
               value={stats?.total_verifies || 0}
               prefix={<AuditOutlined />}
               loading={loading}
@@ -96,19 +96,19 @@ export default function DashboardPage() {
       </Row>
 
       <Card 
-        title="Quick Actions"
+        title="快捷操作"
         extra={
           <Space>
             <Button type="primary" onClick={() => navigate('/packages')}>
-              Manage Packages
+              管理文件包
             </Button>
             <Button onClick={() => navigate('/audit')}>
-              View Audit Logs
+              查看审计日志
             </Button>
           </Space>
         }
       >
-        <p>Welcome to Password Timer Manager. Use the navigation menu to manage file packages, passwords, and view audit logs.</p>
+        <p>欢迎使用密码时效管理器。使用导航菜单管理文件包、密码策略和查看审计日志。</p>
       </Card>
     </div>
   );

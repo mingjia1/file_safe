@@ -15,10 +15,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(values.username, values.password);
-      message.success('Login successful');
+      message.success('登录成功');
       navigate('/dashboard');
     } catch (error: any) {
-      message.error(error.message || 'Login failed');
+      message.error(error.message || '登录失败');
     } finally {
       setLoading(false);
     }
@@ -28,10 +28,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await register(values.username, values.email, values.password, 'operator');
-      message.success('Registration successful, please login');
+      message.success('注册成功，请登录');
       setActiveTab('login');
     } catch (error: any) {
-      message.error(error.message || 'Registration failed');
+      message.error(error.message || '注册失败');
     } finally {
       setLoading(false);
     }
@@ -46,25 +46,25 @@ export default function LoginPage() {
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
     }}>
       <Card style={{ width: 400 }}>
-        <h1 style={{ textAlign: 'center', marginBottom: 24 }}>Password Timer Manager</h1>
+        <h1 style={{ textAlign: 'center', marginBottom: 24 }}>密码时效管理器</h1>
         <Tabs 
           activeKey={activeTab} 
           onChange={setActiveTab}
           items={[
             {
               key: 'login',
-              label: 'Login',
+              label: '登录',
               children: (
                 <Form onFinish={onLogin} layout="vertical">
-                  <Form.Item name="username" rules={[{ required: true, message: 'Please input username' }]}>
-                    <Input prefix={<UserOutlined />} placeholder="Username" />
+                  <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
+                    <Input prefix={<UserOutlined />} placeholder="用户名" />
                   </Form.Item>
-                  <Form.Item name="password" rules={[{ required: true, message: 'Please input password' }]}>
-                    <Input.Password prefix={<LockOutlined />} placeholder="Password" />
+                  <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
+                    <Input.Password prefix={<LockOutlined />} placeholder="密码" />
                   </Form.Item>
                   <Form.Item>
                     <Button type="primary" htmlType="submit" loading={loading} block>
-                      Login
+                      登录
                     </Button>
                   </Form.Item>
                 </Form>
@@ -72,21 +72,21 @@ export default function LoginPage() {
             },
             {
               key: 'register',
-              label: 'Register',
+              label: '注册',
               children: (
                 <Form onFinish={onRegister} layout="vertical">
-                  <Form.Item name="username" rules={[{ required: true, message: 'Please input username' }]}>
-                    <Input prefix={<UserOutlined />} placeholder="Username" />
+                  <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
+                    <Input prefix={<UserOutlined />} placeholder="用户名" />
                   </Form.Item>
-                  <Form.Item name="email" rules={[{ required: true, type: 'email', message: 'Please input valid email' }]}>
-                    <Input prefix={<MailOutlined />} placeholder="Email" />
+                  <Form.Item name="email" rules={[{ required: true, type: 'email', message: '请输入有效邮箱' }]}>
+                    <Input prefix={<MailOutlined />} placeholder="邮箱" />
                   </Form.Item>
-                  <Form.Item name="password" rules={[{ required: true, min: 8, message: 'Password must be at least 8 characters' }]}>
-                    <Input.Password prefix={<LockOutlined />} placeholder="Password" />
+                  <Form.Item name="password" rules={[{ required: true, min: 8, message: '密码至少8个字符' }]}>
+                    <Input.Password prefix={<LockOutlined />} placeholder="密码" />
                   </Form.Item>
                   <Form.Item>
                     <Button type="primary" htmlType="submit" loading={loading} block>
-                      Register
+                      注册
                     </Button>
                   </Form.Item>
                 </Form>

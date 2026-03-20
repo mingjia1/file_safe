@@ -24,7 +24,7 @@ export default function PackagesPage() {
       const response = await packageAPI.list();
       setPackages(response.data.items);
     } catch (error) {
-      message.error('Failed to load packages');
+      message.error('加载文件包失败');
     } finally {
       setLoading(false);
     }
@@ -38,22 +38,22 @@ export default function PackagesPage() {
       formData.append('description', values.description || '');
       formData.append('file', values.file.file);
       await packageAPI.create(formData);
-      message.success('Package created successfully');
+      message.success('文件包创建成功');
       setModalVisible(false);
       form.resetFields();
       loadPackages();
     } catch (error: any) {
-      message.error(error.response?.data?.detail || 'Failed to create package');
+      message.error(error.response?.data?.detail || '创建文件包失败');
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await packageAPI.delete(id);
-      message.success('Package deleted successfully');
+      message.success('文件包删除成功');
       loadPackages();
     } catch (error) {
-      message.error('Failed to delete package');
+      message.error('删除文件包失败');
     }
   };
 
@@ -68,7 +68,7 @@ export default function PackagesPage() {
       link.click();
       link.remove();
     } catch (error) {
-      message.error('Failed to download package');
+      message.error('下载文件包失败');
     }
   };
 
@@ -76,12 +76,12 @@ export default function PackagesPage() {
     if (!selectedPackage) return;
     try {
       await passwordAPI.create(selectedPackage.id, values);
-      message.success('Password added successfully');
+      message.success('密码添加成功');
       setPasswordModalVisible(false);
       passwordForm.resetFields();
       loadPasswords(selectedPackage.id);
     } catch (error) {
-      message.error('Failed to add password');
+      message.error('添加密码失败');
     }
   };
 
@@ -90,7 +90,7 @@ export default function PackagesPage() {
       const response = await passwordAPI.list(packageId);
       setPasswords(response.data);
     } catch (error) {
-      message.error('Failed to load passwords');
+      message.error('加载密码失败');
     }
   };
 
@@ -101,71 +101,71 @@ export default function PackagesPage() {
   };
 
   const columns = [
-    { title: 'Name', dataIndex: 'name', key: 'name' },
-    { title: 'Format', dataIndex: 'format', key: 'format' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (status: string) => (
+    { title: '名称', dataIndex: 'name', key: 'name' },
+    { title: '格式', dataIndex: 'format', key: 'format' },
+    { title: '状态', dataIndex: 'status', key: 'status', render: (status: string) => (
       <span style={{ color: status === 'active' ? 'green' : 'gray' }}>{status}</span>
     )},
-    { title: 'File Size', dataIndex: 'file_size', key: 'file_size', render: (size: number) => `${(size / 1024).toFixed(2)} KB` },
-    { title: 'Passwords', dataIndex: 'password_count', key: 'password_count' },
-    { title: 'Created', dataIndex: 'created_at', key: 'created_at', render: (date: string) => new Date(date).toLocaleString() },
-    { title: 'Actions', key: 'actions', render: (_: any, record: any) => (
+    { title: '文件大小', dataIndex: 'file_size', key: 'file_size', render: (size: number) => `${(size / 1024).toFixed(2)} KB` },
+    { title: '密码数', dataIndex: 'password_count', key: 'password_count' },
+    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', render: (date: string) => new Date(date).toLocaleString() },
+    { title: '操作', key: 'actions', render: (_: any, record: any) => (
       <Space>
-        <Button size="small" icon={<KeyOutlined />} onClick={() => openPasswordModal(record)}>Passwords</Button>
-        <Button size="small" icon={<DownloadOutlined />} onClick={() => handleDownload(record.id, record.name)}>Download</Button>
-        <Popconfirm title="Are you sure?" onConfirm={() => handleDelete(record.id)}>
-          <Button size="small" danger icon={<DeleteOutlined />}>Delete</Button>
+        <Button size="small" icon={<KeyOutlined />} onClick={() => openPasswordModal(record)}>密码</Button>
+        <Button size="small" icon={<DownloadOutlined />} onClick={() => handleDownload(record.id, record.name)}>下载</Button>
+        <Popconfirm title="确定删除?" onConfirm={() => handleDelete(record.id)}>
+          <Button size="small" danger icon={<DeleteOutlined />}>删除</Button>
         </Popconfirm>
       </Space>
     )},
   ];
 
   const passwordColumns = [
-    { title: 'Priority', dataIndex: 'priority', key: 'priority' },
-    { title: 'Status', dataIndex: 'status', key: 'status' },
-    { title: 'Valid From', dataIndex: 'valid_from', key: 'valid_from', render: (d: string) => d ? new Date(d).toLocaleString() : '-' },
-    { title: 'Valid Until', dataIndex: 'valid_until', key: 'valid_until', render: (d: string) => d ? new Date(d).toLocaleString() : '-' },
-    { title: 'Created', dataIndex: 'created_at', key: 'created_at', render: (date: string) => new Date(date).toLocaleString() },
+    { title: '优先级', dataIndex: 'priority', key: 'priority' },
+    { title: '状态', dataIndex: 'status', key: 'status' },
+    { title: '生效时间', dataIndex: 'valid_from', key: 'valid_from', render: (d: string) => d ? new Date(d).toLocaleString() : '-' },
+    { title: '失效时间', dataIndex: 'valid_until', key: 'valid_until', render: (d: string) => d ? new Date(d).toLocaleString() : '-' },
+    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', render: (date: string) => new Date(date).toLocaleString() },
   ];
 
   return (
     <div style={{ padding: 24 }}>
       <Card 
-        title="File Packages" 
+        title="文件包管理" 
         extra={
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
-            Create Package
+            创建文件包
           </Button>
         }
       >
         <Table dataSource={packages} columns={columns} rowKey="id" loading={loading} />
       </Card>
 
-      <Modal title="Create Package" open={modalVisible} onCancel={() => setModalVisible(false)} footer={null}>
+      <Modal title="创建文件包" open={modalVisible} onCancel={() => setModalVisible(false)} footer={null}>
         <Form form={form} layout="vertical" onFinish={handleCreate}>
-          <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+          <Form.Item name="name" label="名称" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="format" label="Format" rules={[{ required: true }]}>
+          <Form.Item name="format" label="格式" rules={[{ required: true }]}>
             <Select>
               <Option value="exe">EXE</Option>
               <Option value="zip">ZIP</Option>
             </Select>
           </Form.Item>
-          <Form.Item name="description" label="Description">
+          <Form.Item name="description" label="描述">
             <Input.TextArea />
           </Form.Item>
-          <Form.Item name="file" label="File" rules={[{ required: true }]}>
+          <Form.Item name="file" label="文件" rules={[{ required: true }]}>
             <Upload beforeUpload={() => false} maxCount={1}>
-              <Button>Select File</Button>
+              <Button>选择文件</Button>
             </Upload>
           </Form.Item>
-          <Button type="primary" htmlType="submit">Create</Button>
+          <Button type="primary" htmlType="submit">创建</Button>
         </Form>
       </Modal>
 
       <Modal 
-        title={`Passwords for ${selectedPackage?.name}`} 
+        title={`${selectedPackage?.name} - 密码管理`} 
         open={passwordModalVisible} 
         onCancel={() => setPasswordModalVisible(false)}
         footer={null}
@@ -174,12 +174,12 @@ export default function PackagesPage() {
         <div style={{ marginBottom: 16 }}>
           <Form form={passwordForm} layout="inline" onFinish={handleAddPassword}>
             <Form.Item name="password" rules={[{ required: true }]}>
-              <Input placeholder="Password" />
+              <Input placeholder="密码" />
             </Form.Item>
             <Form.Item name="priority" initialValue={1}>
-              <Input type="number" placeholder="Priority" />
+              <Input type="number" placeholder="优先级" />
             </Form.Item>
-            <Button type="primary" htmlType="submit">Add Password</Button>
+            <Button type="primary" htmlType="submit">添加密码</Button>
           </Form>
         </div>
         <Table dataSource={passwords} columns={passwordColumns} rowKey="id" size="small" />

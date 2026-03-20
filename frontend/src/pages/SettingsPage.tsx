@@ -25,7 +25,7 @@ export default function SettingsPage() {
         enable_signature: response.data.enable_signature,
       });
     } catch (error) {
-      message.error('Failed to load encryption config');
+      message.error('加载加密配置失败');
     }
   };
 
@@ -33,9 +33,9 @@ export default function SettingsPage() {
     setLoading(true);
     try {
       await adminAPI.updateEncryptionConfig(values);
-      message.success('Settings saved successfully');
+      message.success('设置保存成功');
     } catch (error) {
-      message.error('Failed to save settings');
+      message.error('保存设置失败');
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ export default function SettingsPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <Card title="Encryption Settings">
+      <Card title="加密设置">
         <Form
           form={form}
           layout="vertical"
@@ -60,41 +60,41 @@ export default function SettingsPage() {
             enable_signature: true,
           }}
         >
-          <Divider>Key Lengths</Divider>
-          <Form.Item name="aes_key_length" label="AES Key Length">
+          <Divider>密钥长度</Divider>
+          <Form.Item name="aes_key_length" label="AES 密钥长度">
             <InputNumber min={128} max={256} step={64} />
           </Form.Item>
-          <Form.Item name="rsa_key_length" label="RSA Key Length">
+          <Form.Item name="rsa_key_length" label="RSA 密钥长度">
             <InputNumber min={1024} max={4096} step={1024} />
           </Form.Item>
 
-          <Divider>Password Policy</Divider>
-          <Form.Item name="password_min_length" label="Minimum Password Length">
+          <Divider>密码策略</Divider>
+          <Form.Item name="password_min_length" label="密码最小长度">
             <InputNumber min={4} max={64} />
           </Form.Item>
-          <Form.Item name="password_require_special" label="Require Special Characters" valuePropName="checked">
+          <Form.Item name="password_require_special" label="需要特殊字符" valuePropName="checked">
             <Switch />
           </Form.Item>
-          <Form.Item name="password_require_uppercase" label="Require Uppercase" valuePropName="checked">
+          <Form.Item name="password_require_uppercase" label="需要大写字母" valuePropName="checked">
             <Switch />
           </Form.Item>
-          <Form.Item name="password_require_lowercase" label="Require Lowercase" valuePropName="checked">
+          <Form.Item name="password_require_lowercase" label="需要小写字母" valuePropName="checked">
             <Switch />
           </Form.Item>
-          <Form.Item name="password_require_digit" label="Require Digits" valuePropName="checked">
+          <Form.Item name="password_require_digit" label="需要数字" valuePropName="checked">
             <Switch />
           </Form.Item>
 
-          <Divider>Security</Divider>
-          <Form.Item name="config_encrypt" label="Encrypt Configuration" valuePropName="checked">
+          <Divider>安全设置</Divider>
+          <Form.Item name="config_encrypt" label="加密配置" valuePropName="checked">
             <Switch />
           </Form.Item>
-          <Form.Item name="enable_signature" label="Enable Digital Signature" valuePropName="checked">
+          <Form.Item name="enable_signature" label="启用数字签名" valuePropName="checked">
             <Switch />
           </Form.Item>
 
           <Button type="primary" htmlType="submit" loading={loading}>
-            Save Settings
+            保存设置
           </Button>
         </Form>
       </Card>

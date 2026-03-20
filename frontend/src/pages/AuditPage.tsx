@@ -23,7 +23,7 @@ export default function AuditPage() {
       setLogs(response.data.items);
       setTotal(response.data.total);
     } catch (error) {
-      console.error('Failed to load audit logs');
+      console.error('加载审计日志失败');
     } finally {
       setLoading(false);
     }
@@ -41,39 +41,39 @@ export default function AuditPage() {
       link.click();
       link.remove();
     } catch (error) {
-      console.error('Failed to export');
+      console.error('导出失败');
     }
   };
 
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 220 },
-    { title: 'Action', dataIndex: 'action', key: 'action', render: (action: string) => (
+    { title: '操作', dataIndex: 'action', key: 'action', render: (action: string) => (
       <span style={{ color: action.includes('SUCCESS') ? 'green' : action.includes('FAIL') ? 'red' : 'blue' }}>
         {action}
       </span>
     )},
-    { title: 'Package', dataIndex: 'package_name', key: 'package_name' },
-    { title: 'User', dataIndex: 'username', key: 'username' },
-    { title: 'IP Address', dataIndex: 'ip_address', key: 'ip_address' },
-    { title: 'Detail', dataIndex: 'detail', key: 'detail', render: (detail: any) => detail ? JSON.stringify(detail) : '-' },
-    { title: 'Created', dataIndex: 'created_at', key: 'created_at', render: (date: string) => new Date(date).toLocaleString() },
+    { title: '文件包', dataIndex: 'package_name', key: 'package_name' },
+    { title: '用户', dataIndex: 'username', key: 'username' },
+    { title: 'IP 地址', dataIndex: 'ip_address', key: 'ip_address' },
+    { title: '详情', dataIndex: 'detail', key: 'detail', render: (detail: any) => detail ? JSON.stringify(detail) : '-' },
+    { title: '时间', dataIndex: 'created_at', key: 'created_at', render: (date: string) => new Date(date).toLocaleString() },
   ];
 
   return (
     <div style={{ padding: 24 }}>
       <Card 
-        title="Audit Logs"
+        title="审计日志"
         extra={
           <Space>
-            <Select allowClear placeholder="Filter by action" style={{ width: 160 }} onChange={setAction}>
-              <Select.Option value="VERIFY_SUCCESS">Verify Success</Select.Option>
-              <Select.Option value="VERIFY_FAIL">Verify Fail</Select.Option>
-              <Select.Option value="PACKAGE_CREATE">Package Create</Select.Option>
-              <Select.Option value="PACKAGE_DELETE">Package Delete</Select.Option>
-              <Select.Option value="POLICY_CREATE">Policy Create</Select.Option>
-              <Select.Option value="DOWNLOAD">Download</Select.Option>
+            <Select allowClear placeholder="按操作筛选" style={{ width: 160 }} onChange={setAction}>
+              <Select.Option value="VERIFY_SUCCESS">验证成功</Select.Option>
+              <Select.Option value="VERIFY_FAIL">验证失败</Select.Option>
+              <Select.Option value="PACKAGE_CREATE">创建文件包</Select.Option>
+              <Select.Option value="PACKAGE_DELETE">删除文件包</Select.Option>
+              <Select.Option value="POLICY_CREATE">创建策略</Select.Option>
+              <Select.Option value="DOWNLOAD">下载</Select.Option>
             </Select>
-            <Button icon={<ExportOutlined />} onClick={handleExport}>Export</Button>
+            <Button icon={<ExportOutlined />} onClick={handleExport}>导出</Button>
           </Space>
         }
       >
@@ -87,7 +87,7 @@ export default function AuditPage() {
             total,
             pageSize: 20,
             onChange: setPage,
-            showTotal: (total) => `Total ${total} items`,
+            showTotal: (total) => `共 ${total} 条`,
           }}
         />
       </Card>
