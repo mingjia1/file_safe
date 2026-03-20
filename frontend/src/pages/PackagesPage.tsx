@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Table, Card, Button, Space, Modal, Form, Input, Upload, Select, message, Popconfirm } from 'antd';
+import { Table, Card, Button, Space, Modal, Form, Input, InputNumber, Upload, Select, message, Popconfirm } from 'antd';
 import { PlusOutlined, DeleteOutlined, DownloadOutlined, KeyOutlined } from '@ant-design/icons';
 import { packageAPI, passwordAPI } from '../api/client';
 
@@ -72,16 +72,25 @@ export default function PackagesPage() {
     }
   };
 
-  const handleAddPassword = async (values: { password: string; priority: number }) => {
+  const handleAddPassword = async (values: any) => {
     if (!selectedPackage) return;
+    if (!values.password) {
+      message.error('请输入密码');
+      return;
+    }
     try {
-      await passwordAPI.create(selectedPackage.id, values);
+      const passwordData = {
+        password: values.password,
+        priority: values.priority || 1,
+      };
+      await passwordAPI.create(selectedPackage.id, passwordData);
       message.success('密码添加成功');
       setPasswordModalVisible(false);
       passwordForm.resetFields();
       loadPasswords(selectedPackage.id);
-    } catch (error) {
-      message.error('添加密码失败');
+    } catch (error: any) {
+      console.error('添加密码失败:', error);
+      message.error(error?.response?.data?.detail || '添加密码失败');
     }
   };
 
@@ -177,7 +186,7 @@ export default function PackagesPage() {
               <Input placeholder="密码" />
             </Form.Item>
             <Form.Item name="priority" initialValue={1}>
-              <Input type="number" placeholder="优先级" />
+              <InputNumber min={1} placeholder="优先级" />
             </Form.Item>
             <Button type="primary" htmlType="submit">添加密码</Button>
           </Form>
