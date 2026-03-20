@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import List
 import uuid
+import hashlib
 
 from app.core.database import get_db
 from app.models.password import PasswordPolicy, PasswordStatus
@@ -23,12 +24,14 @@ async def create_password(
     db: AsyncSession = Depends(get_db),
 ):
     password_hash = get_password_hash(request.password)
+    password_key_hash = hashlib.sha256(request.password.encode('utf-8')).hexdigest()[:16]
     package_id_str = str(package_id)
     
     policy = PasswordPolicy(
         id=str(uuid.uuid4()),
         package_id=package_id_str,
         password_hash=password_hash,
+        password_key_hash=password_key_hash,
         priority=request.priority,
         valid_from=request.valid_from,
         valid_until=request.valid_until,
@@ -69,11 +72,13 @@ async def batch_create_passwords(
     
     for pwd_req in request.passwords:
         password_hash = get_password_hash(pwd_req.password)
+        password_key_hash = hashlib.sha256(pwd_req.password.encode('utf-8')).hexdigest()[:16]
         
         policy = PasswordPolicy(
             id=str(uuid.uuid4()),
             package_id=package_id_str,
             password_hash=password_hash,
+            password_key_hash=password_key_hash,
             priority=pwd_req.priority,
             valid_from=pwd_req.valid_from,
             valid_until=pwd_req.valid_until,

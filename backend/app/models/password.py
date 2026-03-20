@@ -19,6 +19,7 @@ class PasswordPolicy(Base):
     id = Column(String(36), primary_key=True)
     package_id = Column(String(36), ForeignKey("file_packages.id"), nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
+    password_key_hash = Column(String(32), nullable=False)
     priority = Column(Integer, nullable=False, default=1)
     valid_from = Column(DateTime, nullable=True)
     valid_until = Column(DateTime, nullable=True)

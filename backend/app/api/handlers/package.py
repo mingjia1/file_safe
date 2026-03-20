@@ -307,6 +307,7 @@ async def download_encrypted_package(
                 "priority": pwd.priority,
                 "valid_from": pwd.valid_from.isoformat() if pwd.valid_from else None,
                 "valid_until": pwd.valid_until.isoformat() if pwd.valid_until else None,
+                "password": pwd.password_key_hash,
             }
             for pwd in passwords
         ]

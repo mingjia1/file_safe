@@ -7,6 +7,7 @@ try:
     from Crypto.Cipher import AES, PKCS1_OAEP
     from Crypto.PublicKey import RSA
     from Crypto.Random import get_random_bytes
+    from Crypto.Protocol.KDF import PBKDF2
     HAS_PYCRYPTODOME = True
 except ImportError:
     HAS_PYCRYPTODOME = False
@@ -132,3 +133,12 @@ class CryptoUtils:
     def verify_config_integrity(config_data: bytes, expected_hash: str) -> bool:
         computed_hash = CryptoUtils.hash_sha256(config_data)
         return computed_hash == expected_hash
+
+    @staticmethod
+    def derive_key_from_password(password: str, salt: bytes = None, key_length: int = 32) -> tuple:
+        if not HAS_PYCRYPTODOME:
+            raise ImportError("pycryptodome is required for key derivation")
+        if salt is None:
+            salt = get_random_bytes(16)
+        key = PBKDF2(password, salt, dkLen=key_length)
+        return key, salt
